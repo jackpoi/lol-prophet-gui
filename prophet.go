@@ -12,7 +12,6 @@ import (
 	"github.com/beastars1/lol-prophet-gui/services/lcu"
 	"github.com/beastars1/lol-prophet-gui/services/lcu/models"
 	"github.com/beastars1/lol-prophet-gui/services/logger"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -51,14 +50,13 @@ type (
 	options struct {
 		debug       bool
 		enablePprof bool
-		httpAddr    string
 	}
 )
 
 const (
 	onJsonApiEventPrefixLen              = len(`[8,"OnJsonApiEvent",`)
-	gameFlowChangedEvt          lcuWsEvt = "/gui-gameflow/v1/gameflow-phase"
-	champSelectUpdateSessionEvt lcuWsEvt = "/gui-champ-select/v1/session"
+	gameFlowChangedEvt          lcuWsEvt = "/lol-gameflow/v1/gameflow-phase"
+	champSelectUpdateSessionEvt lcuWsEvt = "/lol-champ-select/v1/session"
 )
 
 // gameState
@@ -70,17 +68,11 @@ const (
 	GameStateOther       GameState = "other"
 )
 
-const (
-	acpGBK = 936
-)
-
 var (
 	defaultOpts = &options{
 		debug:       false,
 		enablePprof: true,
-		httpAddr:    ":4396",
 	}
-	errWebviewQuit = errors.New("webview quit")
 )
 
 func NewProphet(opts ...ApplyOption) *Prophet {
@@ -106,7 +98,7 @@ func NewProphet(opts ...ApplyOption) *Prophet {
 func (p *Prophet) Run() {
 	go p.MonitorStart()
 	go p.captureStartMessage()
-	Append(fmt.Sprintf("%s已启动 v%s", global.AppName, APPVersion))
+	Append(fmt.Sprintf("%s已启动", global.AppName))
 }
 
 func (p *Prophet) isLcuActive() bool {
@@ -175,15 +167,11 @@ func (p *Prophet) initGameFlowMonitor(port int, authPwd string) error {
 		return errors.New("获取当前召唤师信息失败:" + err.Error())
 	}
 	p.lcuActive = true
-	// if global.IsDevMode() {
-	// 	p.ChampionSelectStart()
-	// }
 
 	_ = c.WriteMessage(websocket.TextMessage, []byte("[5, \"OnJsonApiEvent\"]"))
 	for {
 		msgType, message, err := c.ReadMessage()
 		if err != nil {
-			// log.Println("read:", err)
 			logger.Debug("lol事件监控读取消息失败", zap.Error(err))
 			return err
 		}
@@ -192,7 +180,7 @@ func (p *Prophet) initGameFlowMonitor(port int, authPwd string) error {
 			continue
 		}
 		_ = json.Unmarshal(message[onJsonApiEventPrefixLen:len(message)-1], msg)
-		// log.Println("ws evt: ", msg.Uri)
+		//Append("lol事件监控读取消息 -> ", msg.Uri)
 		switch msg.Uri {
 		case string(gameFlowChangedEvt):
 			gameFlow, ok := msg.Data.(string)
@@ -208,7 +196,7 @@ func (p *Prophet) initGameFlowMonitor(port int, authPwd string) error {
 			sessionInfo := &lcu.ChampSelectSessionInfo{}
 			err = json.Unmarshal(bts, sessionInfo)
 			if err != nil {
-				log.Println("解析结构体失败", err)
+				logger.Warn("解析结构体失败", err)
 				continue
 			}
 			go func() {
@@ -217,18 +205,15 @@ func (p *Prophet) initGameFlowMonitor(port int, authPwd string) error {
 		default:
 
 		}
-
-		// log.Printf("recv: %s", message)
 	}
 }
 
 func (p *Prophet) onGameFlowUpdate(gameFlow string) {
-	// clientCfg := global.GetClientConf()
-	logger.Debug("切换状态:" + gameFlow)
+	//Append("切换状态:" + gameFlow)
 	switch gameFlow {
 	case string(models.GameFlowChampionSelect):
-		Append("进入英雄选择阶段,正在计算用户分数")
-		sentry.CaptureMessage("进入英雄选择阶段,正在计算用户分数")
+		Append("进入英雄选择阶段，正在计算分数")
+		sentry.CaptureMessage("进入英雄选择阶段，正在计算分数")
 		p.updateGameState(GameStateChampSelect)
 		go p.ChampionSelectStart()
 	case string(models.GameFlowNone):
@@ -279,7 +264,7 @@ func (p Prophet) ChampionSelectStart() {
 	var summonerIDList []int64
 	for i := 0; i < 3; i++ {
 		time.Sleep(time.Second)
-		// 获取队伍所有用户信息
+		// 获取队伍所有玩家信息
 		conversationID, summonerIDList, _ = getTeamUsers()
 		if len(summonerIDList) != 5 {
 			continue
@@ -296,7 +281,7 @@ func (p Prophet) ChampionSelectStart() {
 		g.Go(func() error {
 			actScore, err := GetUserScore(summonerID)
 			if err != nil {
-				logger.Error("计算用户得分失败", zap.Error(err), zap.Int64("summonerID", summonerID))
+				logger.Error("计算玩家分数失败", zap.Error(err), zap.Int64("summonerID", summonerID))
 				return nil
 			}
 			mu.Lock()
@@ -361,7 +346,7 @@ func (p Prophet) ChampionSelectStart() {
 		time.Sleep(time.Millisecond * 1500)
 	}
 	if !clientCfg.AutoSendTeamHorse {
-		log.Println("已将队伍马匹信息复制到剪切板")
+		Append("已将队伍马匹信息复制到剪切板")
 		_ = clipboard.WriteAll(allMsg)
 		return
 	}
@@ -447,7 +432,6 @@ func (p Prophet) CalcEnemyTeamScore() {
 			currKDAMsg = currKDAMsg[:len(currKDAMsg)-1]
 		}
 		msg := fmt.Sprintf("敌方%s：%s 近期KDA：%s", horse, scoreInfo.SummonerName, currKDAMsg)
-		//log.Printf(msg)
 		Append(msg)
 		allMsg += msg + "\n"
 	}

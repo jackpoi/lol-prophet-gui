@@ -37,14 +37,17 @@ func (g *gui) LoadUI(app fyne.App) {
 	g.output = widget.NewMultiLineEntry()
 	g.output.TextStyle.Monospace = false
 
-	w := app.NewWindow("LOL 先知")
+	w := app.NewWindow(global.AppName)
 
-	entry := widget.NewEntryWithData(binding.IntToString(binding.BindInt(&g.conf.ChooseChampSendMsgDelaySec)))
 	checkConf := container.NewGridWithColumns(4,
 		widget.NewCheckWithData("自动接受对局", binding.BindBool(&g.conf.AutoAcceptGame)),
 		widget.NewCheckWithData("选择英雄界面自动发送", binding.BindBool(&g.conf.AutoSendTeamHorse)),
 		widget.NewCheckWithData("发送自己马匹信息", binding.BindBool(&g.conf.ShouldSendSelfHorse)),
-		container.NewHBox(widget.NewLabel("选择英雄"), entry, widget.NewLabel("秒后发送")),
+		container.NewHBox(
+			widget.NewLabel("选择英雄"),
+			widget.NewEntryWithData(binding.IntToString(binding.BindInt(&g.conf.ChooseChampSendMsgDelaySec))),
+			widget.NewLabel("秒后发送"),
+		),
 	)
 
 	horse0Name := binding.BindString(&g.conf.HorseNameConf[0])
@@ -77,12 +80,7 @@ func (g *gui) LoadUI(app fyne.App) {
 			widget.NewLabel("查询玩家马匹信息"),
 			player,
 			widget.NewButton("查询", func() {
-				name, _, kda, horse, err := g.p.queryBySummonerName(player.Text)
-				if err != nil {
-					Append(err)
-					return
-				}
-				Append(fmt.Sprintf("%s : %s，最近KDA: %s", name, horse, kda))
+				g.queryHorse(player.Text)
 			})),
 		container.NewGridWithColumns(3,
 			container.NewGridWithColumns(1),
@@ -95,23 +93,13 @@ func (g *gui) LoadUI(app fyne.App) {
 	confirm := container.NewGridWithColumns(6,
 		widget.NewLabel("查询自己马匹信息"),
 		widget.NewButton("查询", func() {
-			name, _, kda, horse, err := g.p.queryBySummonerName("")
-			if err != nil {
-				Append(err)
-				return
-			}
-			Append(fmt.Sprintf("%s : %s，最近KDA: %s", name, horse, kda))
+			g.queryHorse("")
 		}),
 		container.NewGridWithColumns(1),
 		container.NewGridWithColumns(1),
 		container.NewGridWithColumns(1),
 		widget.NewButton("保存", func() {
-			err := g.p.UpdateClientConf(g.conf)
-			if err != nil {
-				Append("保存失败", err)
-				return
-			}
-			Append("保存成功")
+			g.update()
 		}))
 
 	box := container.NewGridWithColumns(1,
@@ -126,6 +114,24 @@ func (g *gui) LoadUI(app fyne.App) {
 	w.SetContent(box)
 	w.Resize(resize(1000, 600))
 	w.Show()
+}
+
+func (g *gui) queryHorse(player string) {
+	name, score, kda, horse, err := g.p.queryBySummonerName(player)
+	if err != nil {
+		Append(err)
+		return
+	}
+	Append(fmt.Sprintf("本局%s：%s 得分：%.2f 近期KDA：%s", name, horse, score, kda))
+}
+
+func (g *gui) update() {
+	err := g.p.UpdateClientConf(g.conf)
+	if err != nil {
+		Append("保存失败", err)
+		return
+	}
+	Append("保存成功")
 }
 
 func display(newtext string) {

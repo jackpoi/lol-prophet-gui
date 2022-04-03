@@ -16,7 +16,6 @@ type (
 		Sentry    SentryConf    `json:"sentry"`
 		PProf     PProfConf     `json:"pprof"`
 		Log       LogConf       `json:"log" required:"true"`
-		BuffApi   BuffApi       `json:"buffApi" required:"true"`
 		CalcScore CalcScoreConf `json:"calcScore" required:"true"`
 	}
 	SentryConf struct {

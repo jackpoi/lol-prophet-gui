@@ -25,9 +25,8 @@ type (
 const (
 	LogWriterCleanupKey = "logWriter"
 	sentryDsn           = "https://815bc0eb2615452caa81e3ccb536ce05@o1184940.ingest.sentry.io/6303327"
-	buffApiUrl          = "https://lol.buffge.com"
-	defaultLogPath      = "./logs/hh-lol-prophet.log"
-	AppName             = "lol对局先知"
+	defaultLogPath      = "./logs/lol-prophet.log"
+	AppName             = "LoL Prophet"
 )
 
 const (
@@ -65,10 +64,6 @@ var (
 		Log: conf.LogConf{
 			Level:    logger.LevelInfoStr,
 			Filepath: defaultLogPath,
-		},
-		BuffApi: conf.BuffApi{
-			Url:     buffApiUrl,
-			Timeout: 3,
 		},
 		CalcScore: conf.CalcScoreConf{
 			Enabled:            true,
@@ -127,8 +122,8 @@ var (
 			},
 			AdjustKDA: [2]float64{2, 5},
 			Horse: [6]conf.HorseScoreConf{
-				{Score: 160, Name: horse1},
-				{Score: 130, Name: horse2},
+				{Score: 150, Name: horse1},
+				{Score: 125, Name: horse2},
 				{Score: 110, Name: horse3},
 				{Score: 90, Name: horse4},
 				{Score: 50, Name: horse5},
