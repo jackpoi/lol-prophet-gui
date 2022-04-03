@@ -3,7 +3,7 @@ package global
 import (
 	"github.com/beastars1/lol-prophet-gui/conf"
 	level "github.com/beastars1/lol-prophet-gui/pkg/logger"
-	"github.com/beastars1/lol-prophet-gui/services/logger"
+	"log"
 	"sync"
 
 	"go.uber.org/zap"
@@ -159,7 +159,7 @@ func GetUserInfo() UserInfo {
 func Cleanup() {
 	for name, cleanup := range Cleanups {
 		if err := cleanup(); err != nil {
-			logger.Info("%s cleanup err:%v\n", name, err)
+			log.Printf("%s cleanup err:%v\n", name, err)
 		}
 	}
 	if fn, ok := Cleanups[LogWriterCleanupKey]; ok {
