@@ -1,15 +1,12 @@
 package lol_prophet_gui
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
 	ginApp "github.com/beastars1/lol-prophet-gui/pkg/gin"
-	"github.com/beastars1/lol-prophet-gui/services/db/models"
+	"github.com/beastars1/lol-prophet-gui/services/db/enity"
 	"github.com/beastars1/lol-prophet-gui/services/lcu"
-	"io/ioutil"
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +29,7 @@ func (api Api) ProphetActiveMid(c *gin.Context) {
 	}
 	c.Next()
 }
+
 func (api Api) QueryHorseBySummonerName(c *gin.Context) {
 	app := ginApp.GetApp(c)
 	d := &summonerNameReq{}
@@ -81,37 +79,42 @@ func (api Api) CopyHorseMsgToClipBoard(c *gin.Context) {
 	app := ginApp.GetApp(c)
 	app.Success()
 }
+
 func (api Api) GetAllConf(c *gin.Context) {
 	app := ginApp.GetApp(c)
 	app.Data(global.GetClientConf())
 }
+
 func (api Api) UpdateClientConf(c *gin.Context) {
 	app := ginApp.GetApp(c)
-	d := &conf.UpdateClientConfReq{}
+	d := &conf.Client{}
 	if err := c.ShouldBind(d); err != nil {
 		app.ValidError(err)
 		return
 	}
-	cfg := global.SetClientConf(*d)
+	cfg := global.SetClientConf(d)
 	bts, _ := json.Marshal(cfg)
-	m := models.Config{}
-	err := m.Update(models.LocalClientConfKey, string(bts))
+	m := enity.Config{}
+	err := m.Update(enity.LocalClientConfKey, string(bts))
 	if err != nil {
 		app.CommonError(err)
 		return
 	}
 	app.Success()
 }
+
 func (api Api) DevHand(c *gin.Context) {
 	app := ginApp.GetApp(c)
 	app.Data(gin.H{
 		"buffge": 23456,
 	})
 }
+
 func (api Api) GetAppInfo(c *gin.Context) {
 	app := ginApp.GetApp(c)
 	app.Data(global.AppBuildInfo)
 }
+
 func (api Api) GetLcuAuthInfo(c *gin.Context) {
 	app := ginApp.GetApp(c)
 	port, token, err := lcu.GetLolClientApiInfo()
@@ -125,35 +128,6 @@ func (api Api) GetLcuAuthInfo(c *gin.Context) {
 	})
 }
 
-const (
-	localUrl = "127.0.0.1:4396"
-	version  = "v1"
-)
-
 func getAll() *conf.Client {
-	//resp, err := http.Post("http://127.0.0.1:4396/v1/config/getAll")
-	//if err != nil {
-	//	return nil
-	//}
-	//bts, _ := io.ReadAll(resp.Body)
-	//conf := &UpdateClientConfReq{}
-	//json.Unmarshal(bts, conf)
-	//return conf
 	return &global.DefaultClientConf
-}
-
-func queryBySummonerName(name string) (string, error) {
-	body, err := json.Marshal(summonerNameReq{name})
-	if err != nil {
-		return "", err
-	}
-	resp, err := http.Post("http://127.0.0.1:4396/v1/horse/queryBySummonerName", "", bytes.NewBuffer(body))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	result, _ := ioutil.ReadAll(resp.Body)
-	// todo
-	//resp
-	return string(result), err
 }

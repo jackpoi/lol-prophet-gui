@@ -6,8 +6,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
 	ginApp "github.com/beastars1/lol-prophet-gui/pkg/gin"
+	"github.com/beastars1/lol-prophet-gui/services/db/enity"
 	"github.com/beastars1/lol-prophet-gui/services/lcu"
 	"github.com/beastars1/lol-prophet-gui/services/lcu/models"
 	"github.com/beastars1/lol-prophet-gui/services/logger"
@@ -15,7 +17,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"os/signal"
 	"strings"
 	"sync"
@@ -63,8 +64,8 @@ type (
 
 const (
 	onJsonApiEventPrefixLen              = len(`[8,"OnJsonApiEvent",`)
-	gameFlowChangedEvt          lcuWsEvt = "/lol-gameflow/v1/gameflow-phase"
-	champSelectUpdateSessionEvt lcuWsEvt = "/lol-champ-select/v1/session"
+	gameFlowChangedEvt          lcuWsEvt = "/gui-gameflow/v1/gameflow-phase"
+	champSelectUpdateSessionEvt lcuWsEvt = "/gui-champ-select/v1/session"
 )
 
 // gameState
@@ -112,8 +113,7 @@ func (p *Prophet) Run() error {
 	go p.MonitorStart()
 	go p.captureStartMessage()
 	p.initGin()
-	go p.initWebview()
-	log.Printf("%s已启动 v%s", global.AppName, APPVersion)
+	Append(fmt.Sprintf("%s已启动 v%s", global.AppName, APPVersion))
 	// 监听，守护进程
 	return p.notifyQuit()
 }
@@ -268,7 +268,7 @@ func (p *Prophet) onGameFlowUpdate(gameFlow string) {
 	logger.Debug("切换状态:" + gameFlow)
 	switch gameFlow {
 	case string(models.GameFlowChampionSelect):
-		log.Println("进入英雄选择阶段,正在计算用户分数")
+		Append("进入英雄选择阶段,正在计算用户分数")
 		sentry.CaptureMessage("进入英雄选择阶段,正在计算用户分数")
 		p.updateGameState(GameStateChampSelect)
 		go p.ChampionSelectStart()
@@ -307,6 +307,7 @@ func (p *Prophet) captureStartMessage() {
 	}
 	sentry.CaptureMessage(global.AppName + "已启动")
 }
+
 func (p *Prophet) initGin() {
 	if p.opts.debug {
 		gin.SetMode(gin.DebugMode)
@@ -333,22 +334,6 @@ func (p *Prophet) initGin() {
 		Handler: engine,
 	}
 	p.httpSrv = srv
-}
-func (p *Prophet) initWebview() {
-	clientCfg := global.GetClientConf()
-	defaultUrl := "https://lol.buffge.com/dev/client?version=" + APPVersion
-	websiteUrl := defaultUrl
-	if clientCfg.ShouldAutoOpenBrowser != nil && !*clientCfg.ShouldAutoOpenBrowser {
-		log.Println("自动打开浏览器选项已关闭,手动打开请访问 " + websiteUrl)
-		return
-	}
-	// windowWeight := 1000
-	// windowHeight := 650
-
-	cmd := exec.Command("cmd", "/c", "start", websiteUrl)
-	_ = cmd.Run()
-	log.Println("界面已在浏览器中打开,若未打开请手动访问 " + websiteUrl)
-	return
 }
 
 // ChampionSelectStart 选择英雄时进行核心逻辑处理：获取人员、计算得分、发送信息
@@ -417,7 +402,8 @@ func (p Prophet) ChampionSelectStart() {
 		}
 
 		msg := fmt.Sprintf("本局%s：%s 近期KDA：%s", horse, scoreInfo.SummonerName, currKDAMsg)
-		log.Printf(msg)
+		//log.Printf(msg)
+		Append(msg)
 		<-sendConversationMsgDelayCtx.Done()
 		if clientCfg.AutoSendTeamHorse {
 			mergedMsg += msg + "\n"
@@ -532,7 +518,8 @@ func (p Prophet) CalcEnemyTeamScore() {
 			currKDAMsg = currKDAMsg[:len(currKDAMsg)-1]
 		}
 		msg := fmt.Sprintf("敌方%s：%s 近期KDA：%s", horse, scoreInfo.SummonerName, currKDAMsg)
-		log.Printf(msg)
+		//log.Printf(msg)
+		Append(msg)
 		allMsg += msg + "\n"
 	}
 	_ = clipboard.WriteAll(allMsg)
@@ -568,4 +555,65 @@ loop:
 		_ = lcu.BanChampion(clientCfg.AutoBanChampID, userActionID)
 	}
 	return nil
+}
+
+func (p Prophet) UpdateClientConf(conf *conf.Client) error {
+	cfg := global.SetClientConf(conf)
+	bts, _ := json.Marshal(cfg)
+	m := enity.Config{}
+	return m.Update(enity.LocalClientConfKey, string(bts))
+}
+
+func (p Prophet) queryBySummonerName(player string) (string, float64, string, string, error) {
+	summonerName := strings.TrimSpace(player)
+	var summonerID int64 = 0
+	var (
+		name  = ""
+		score = 0.0
+		kda   = ""
+		horse = ""
+	)
+
+	if summonerName == "" {
+		if p.currSummoner == nil {
+			err := errors.New("系统错误")
+			return name, score, kda, horse, err
+		}
+		// 如果为空，查询自己的分数
+		summonerID = p.currSummoner.SummonerId
+		name = p.currSummoner.DisplayName
+	} else {
+		info, err := lcu.QuerySummonerByName(summonerName)
+		if err != nil || info.SummonerId <= 0 {
+			err = errors.New("未查询到召唤师")
+			return name, score, kda, horse, err
+		}
+		summonerID = info.SummonerId
+		name = summonerName
+	}
+	scoreInfo, err := GetUserScore(summonerID)
+	if err != nil {
+		err = errors.New("系统错误")
+		return name, score, kda, horse, err
+	}
+	score = scoreInfo.Score
+	kda = kdaString(scoreInfo.CurrKDA, 5)
+
+	scoreCfg := global.GetScoreConf()
+	clientCfg := global.GetClientConf()
+	for i, v := range scoreCfg.Horse {
+		if scoreInfo.Score >= v.Score {
+			horse = clientCfg.HorseNameConf[i]
+			break
+		}
+	}
+	return name, score, kda, horse, err
+}
+
+func kdaString(currKDA [][3]int, n int) string {
+	currKDASb := strings.Builder{}
+	for i := 0; i < n && i < len(currKDA); i++ {
+		currKDASb.WriteString(fmt.Sprintf("%d/%d/%d  ", currKDA[i][0], currKDA[i][1], currKDA[i][2]))
+	}
+	return currKDASb.String()
 }

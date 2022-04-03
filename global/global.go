@@ -154,9 +154,11 @@ var (
 func SetUserInfo(info UserInfo) {
 	userInfo = info
 }
+
 func GetUserInfo() UserInfo {
 	return userInfo
 }
+
 func Cleanup() {
 	for name, cleanup := range Cleanups {
 		if err := cleanup(); err != nil {
@@ -167,64 +169,71 @@ func Cleanup() {
 		_ = fn()
 	}
 }
+
 func IsDevMode() bool {
 	return GetEnv() == conf.ModeDebug
 }
+
 func GetEnv() conf.Mode {
 	return Conf.Mode
 }
-func GetScoreConf() conf.CalcScoreConf {
+
+func GetScoreConf() *conf.CalcScoreConf {
 	confMu.Lock()
 	defer confMu.Unlock()
-	return Conf.CalcScore
+	return &Conf.CalcScore
 }
+
 func SetScoreConf(scoreConf conf.CalcScoreConf) {
 	confMu.Lock()
 	Conf.CalcScore = scoreConf
 	confMu.Unlock()
 	return
 }
-func GetClientConf() conf.Client {
+
+func GetClientConf() *conf.Client {
 	confMu.Lock()
 	defer confMu.Unlock()
 	data := *ClientConf
-	return data
+	return &data
 }
-func SetClientConf(cfg conf.UpdateClientConfReq) *conf.Client {
+
+func SetClientConf(cfg *conf.Client) *conf.Client {
 	confMu.Lock()
 	defer confMu.Unlock()
-	if cfg.AutoAcceptGame != nil {
-		ClientConf.AutoAcceptGame = *cfg.AutoAcceptGame
+	if &cfg.AutoAcceptGame != nil {
+		ClientConf.AutoAcceptGame = cfg.AutoAcceptGame
 	}
-	if cfg.AutoPickChampID != nil {
-		ClientConf.AutoPickChampID = *cfg.AutoPickChampID
+	if &cfg.AutoPickChampID != nil {
+		ClientConf.AutoPickChampID = cfg.AutoPickChampID
 	}
-	if cfg.AutoBanChampID != nil {
-		ClientConf.AutoBanChampID = *cfg.AutoBanChampID
+	if &cfg.AutoBanChampID != nil {
+		ClientConf.AutoBanChampID = cfg.AutoBanChampID
 	}
-	if cfg.AutoSendTeamHorse != nil {
-		ClientConf.AutoSendTeamHorse = *cfg.AutoSendTeamHorse
+	if &cfg.AutoSendTeamHorse != nil {
+		ClientConf.AutoSendTeamHorse = cfg.AutoSendTeamHorse
 	}
-	if cfg.ShouldSendSelfHorse != nil {
-		ClientConf.ShouldSendSelfHorse = *cfg.ShouldSendSelfHorse
+	if &cfg.ShouldSendSelfHorse != nil {
+		ClientConf.ShouldSendSelfHorse = cfg.ShouldSendSelfHorse
 	}
-	if cfg.HorseNameConf != nil {
-		ClientConf.HorseNameConf = *cfg.HorseNameConf
+	if &cfg.HorseNameConf != nil {
+		ClientConf.HorseNameConf = cfg.HorseNameConf
 	}
-	if cfg.ChooseSendHorseMsg != nil {
-		ClientConf.ChooseSendHorseMsg = *cfg.ChooseSendHorseMsg
+	if &cfg.ChooseSendHorseMsg != nil {
+		ClientConf.ChooseSendHorseMsg = cfg.ChooseSendHorseMsg
 	}
-	if cfg.ChooseChampSendMsgDelaySec != nil {
-		ClientConf.ChooseChampSendMsgDelaySec = *cfg.ChooseChampSendMsgDelaySec
+	if &cfg.ChooseChampSendMsgDelaySec != nil {
+		ClientConf.ChooseChampSendMsgDelaySec = cfg.ChooseChampSendMsgDelaySec
 	}
-	if cfg.ShouldInGameSaveMsgToClipBoard != nil {
-		ClientConf.ShouldInGameSaveMsgToClipBoard = *cfg.ShouldInGameSaveMsgToClipBoard
+	if &cfg.ShouldInGameSaveMsgToClipBoard != nil {
+		ClientConf.ShouldInGameSaveMsgToClipBoard = cfg.ShouldInGameSaveMsgToClipBoard
 	}
-	if cfg.ShouldAutoOpenBrowser != nil {
+	if &cfg.ShouldAutoOpenBrowser != nil {
 		ClientConf.ShouldAutoOpenBrowser = cfg.ShouldAutoOpenBrowser
 	}
 	return ClientConf
 }
+
 func SetAppInfo(info AppInfo) {
 	AppBuildInfo = info
 }

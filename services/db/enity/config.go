@@ -1,4 +1,4 @@
-package models
+package enity
 
 import (
 	"context"

@@ -2,14 +2,12 @@ package bootstrap
 
 import (
 	"encoding/json"
-	lol_prophet_gui "github.com/beastars1/lol-prophet-gui"
 	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
 	"github.com/beastars1/lol-prophet-gui/pkg/bdk"
 	"github.com/beastars1/lol-prophet-gui/pkg/logger"
 	"github.com/beastars1/lol-prophet-gui/pkg/windows/admin"
-	"github.com/beastars1/lol-prophet-gui/services/buffApi"
-	"github.com/beastars1/lol-prophet-gui/services/db/models"
+	"github.com/beastars1/lol-prophet-gui/services/db/enity"
 	"github.com/beastars1/lol-prophet-gui/services/ws"
 	"io"
 	"net/http"
@@ -66,15 +64,15 @@ func initClientConf() (err error) {
 	if !bdk.IsFile(dbPath) {
 		db, err = gorm.Open(sqlite.Open(dbPath), gormCfg)
 		bts, _ := json.Marshal(global.DefaultClientConf)
-		err = db.Exec(models.InitLocalClientSql, models.LocalClientConfKey, string(bts)).Error
+		err = db.Exec(enity.InitLocalClientSql, enity.LocalClientConfKey, string(bts)).Error
 		if err != nil {
 			return
 		}
 		*global.ClientConf = global.DefaultClientConf
 	} else {
 		db, err = gorm.Open(sqlite.Open(dbPath), gormCfg)
-		confItem := &models.Config{}
-		err = db.Table("config").Where("k = ?", models.LocalClientConfKey).First(confItem).Error
+		confItem := &enity.Config{}
+		err = db.Table("config").Where("k = ?", enity.LocalClientConfKey).First(confItem).Error
 		if err != nil {
 			return
 		}
@@ -122,7 +120,6 @@ func InitApp() error {
 	initConf()
 	initLog(&global.Conf.Log)
 	initLib()
-	initApi()
 	initGlobal()
 	return nil
 }
@@ -136,23 +133,9 @@ func initConsole() {
 }
 
 func initGlobal() {
-	go initAutoReloadCalcConf()
+	//go ...
 }
 
-func initAutoReloadCalcConf() {
-	ticker := time.NewTicker(time.Minute)
-	for {
-		latestScoreConf, err := buffApi.GetCurrConf()
-		if err == nil && latestScoreConf != nil && latestScoreConf.Enabled {
-			global.SetScoreConf(*latestScoreConf)
-		}
-		<-ticker.C
-	}
-}
-
-func initApi() {
-	buffApi.Init(global.Conf.BuffApi.Url, global.Conf.BuffApi.Timeout)
-}
 func initLib() {
 	_ = os.Setenv("TZ", defaultTZ)
 	now.WeekStartDay = time.Monday
@@ -198,10 +181,10 @@ func initSentry(dsn string) error {
 		sampleRate = 1.0
 	}
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn:         dsn,
-		Debug:       isDebugMode,
-		SampleRate:  sampleRate,
-		Release:     lol_prophet_gui.Commit,
+		Dsn:        dsn,
+		Debug:      isDebugMode,
+		SampleRate: sampleRate,
+		//Release:     lol_prophet_gui.Commit,
 		Environment: global.GetEnv(),
 	})
 	if err == nil {

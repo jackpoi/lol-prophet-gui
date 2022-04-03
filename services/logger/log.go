@@ -11,17 +11,20 @@ import (
 
 func Debug(msg string, keysAndValues ...interface{}) {
 	global.Logger.Debugw(msg, keysAndValues...)
+	//lol_prophet_gui.Append(msg)
 }
 func Info(msg string, keysAndValues ...interface{}) {
 	global.Logger.Infow(msg, keysAndValues...)
+	//lol_prophet_gui.Append(msg)
 }
 func Warn(msg string, keysAndValues ...interface{}) {
+	//lol_prophet_gui.Append(msg)
 	go sentry.WithScope(func(scope *sentry.Scope) {
 		scope.SetLevel(sentry.LevelWarning)
 		scope.SetExtra("kv", keysAndValues)
 		sentry.CaptureMessage(msg)
 	})
-	global.Logger.Warnw(msg, keysAndValues...)
+	//global.Logger.Warnw(msg, keysAndValues...)
 }
 func Error(msg string, keysAndValues ...interface{}) {
 	var errMsg string
@@ -32,6 +35,7 @@ func Error(msg string, keysAndValues ...interface{}) {
 			errVerbose = fmt.Sprintf("%+v", field.Interface.(error))
 		}
 	}
+	//lol_prophet_gui.Append(errVerbose)
 	go sentry.WithScope(func(scope *sentry.Scope) {
 		scope.SetLevel(sentry.LevelError)
 		scope.SetExtra("kv", keysAndValues)

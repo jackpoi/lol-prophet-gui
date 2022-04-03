@@ -6,7 +6,11 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
+	"github.com/beastars1/lol-prophet-gui/bootstrap"
 	"github.com/beastars1/lol-prophet-gui/conf"
+	"github.com/beastars1/lol-prophet-gui/global"
+	"log"
+	"sync"
 	"time"
 )
 
@@ -14,33 +18,44 @@ const (
 	layout = "2006-01-02 15:01:05"
 )
 
-type lol struct {
+var (
+	lol  *gui
+	once sync.Once
+)
+
+type gui struct {
 	output *widget.Entry
 	conf   *conf.Client
 	window fyne.Window
+	p      *Prophet
 }
 
-func (l *lol) LoadUI(app fyne.App) {
-	l.output = widget.NewMultiLineEntry()
-	l.output.Resize(resize(800, 300))
-	l.output.TextStyle.Monospace = false
+func (g *gui) RunProphet() {
+	if err := g.p.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (g *gui) LoadUI(app fyne.App) {
+	g.output = widget.NewMultiLineEntry()
+	g.output.TextStyle.Monospace = false
 
 	w := app.NewWindow("LOL 先知")
 
-	entry := widget.NewEntryWithData(binding.IntToString(binding.BindInt(&l.conf.ChooseChampSendMsgDelaySec)))
+	entry := widget.NewEntryWithData(binding.IntToString(binding.BindInt(&g.conf.ChooseChampSendMsgDelaySec)))
 	checkConf := container.NewGridWithColumns(4,
-		widget.NewCheckWithData("自动接受对局", binding.BindBool(&l.conf.AutoAcceptGame)),
-		widget.NewCheckWithData("选择英雄界面自动发送", binding.BindBool(&l.conf.AutoSendTeamHorse)),
-		widget.NewCheckWithData("发送自己马匹信息", binding.BindBool(&l.conf.ShouldSendSelfHorse)),
+		widget.NewCheckWithData("自动接受对局", binding.BindBool(&g.conf.AutoAcceptGame)),
+		widget.NewCheckWithData("选择英雄界面自动发送", binding.BindBool(&g.conf.AutoSendTeamHorse)),
+		widget.NewCheckWithData("发送自己马匹信息", binding.BindBool(&g.conf.ShouldSendSelfHorse)),
 		container.NewHBox(widget.NewLabel("选择英雄"), entry, widget.NewLabel("秒后发送")),
 	)
 
-	horse0Name := binding.BindString(&l.conf.HorseNameConf[0])
-	horse1Name := binding.BindString(&l.conf.HorseNameConf[1])
-	horse2Name := binding.BindString(&l.conf.HorseNameConf[2])
-	horse3Name := binding.BindString(&l.conf.HorseNameConf[3])
-	horse4Name := binding.BindString(&l.conf.HorseNameConf[4])
-	horse5Name := binding.BindString(&l.conf.HorseNameConf[5])
+	horse0Name := binding.BindString(&g.conf.HorseNameConf[0])
+	horse1Name := binding.BindString(&g.conf.HorseNameConf[1])
+	horse2Name := binding.BindString(&g.conf.HorseNameConf[2])
+	horse3Name := binding.BindString(&g.conf.HorseNameConf[3])
+	horse4Name := binding.BindString(&g.conf.HorseNameConf[4])
+	horse5Name := binding.BindString(&g.conf.HorseNameConf[5])
 	horseConf := container.NewGridWithColumns(6,
 		widget.NewEntryWithData(horse0Name),
 		widget.NewEntryWithData(horse1Name),
@@ -51,12 +66,12 @@ func (l *lol) LoadUI(app fyne.App) {
 	)
 
 	horseCheck := container.NewGridWithColumns(6,
-		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&l.conf.ChooseSendHorseMsg[0])), widget.NewLabelWithData(horse0Name)),
-		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&l.conf.ChooseSendHorseMsg[1])), widget.NewLabelWithData(horse1Name)),
-		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&l.conf.ChooseSendHorseMsg[2])), widget.NewLabelWithData(horse2Name)),
-		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&l.conf.ChooseSendHorseMsg[3])), widget.NewLabelWithData(horse3Name)),
-		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&l.conf.ChooseSendHorseMsg[4])), widget.NewLabelWithData(horse4Name)),
-		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&l.conf.ChooseSendHorseMsg[5])), widget.NewLabelWithData(horse5Name)),
+		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[0])), widget.NewLabelWithData(horse0Name)),
+		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[1])), widget.NewLabelWithData(horse1Name)),
+		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[2])), widget.NewLabelWithData(horse2Name)),
+		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[3])), widget.NewLabelWithData(horse3Name)),
+		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[4])), widget.NewLabelWithData(horse4Name)),
+		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[5])), widget.NewLabelWithData(horse5Name)),
 	)
 
 	player := widget.NewEntry()
@@ -65,42 +80,41 @@ func (l *lol) LoadUI(app fyne.App) {
 			widget.NewLabel("查询玩家马匹信息"),
 			player,
 			widget.NewButton("查询", func() {
-				horse, err := queryBySummonerName(player.Text)
-				l.append(player.Text)
+				name, _, kda, horse, err := g.p.queryBySummonerName(player.Text)
 				if err != nil {
-					l.append(err)
+					Append(err)
 					return
 				}
-				l.append(horse)
+				Append(fmt.Sprintf("%s : %s，最近KDA: %s", name, horse, kda))
 			})),
 		container.NewGridWithColumns(3,
 			container.NewGridWithColumns(1),
 			container.NewGridWithColumns(1),
 			widget.NewButton("清屏", func() {
-				l.display("")
+				display("")
 			})),
 	)
 
 	confirm := container.NewGridWithColumns(6,
 		widget.NewLabel("查询自己马匹信息"),
 		widget.NewButton("查询", func() {
-			horse, err := queryBySummonerName("")
+			name, _, kda, horse, err := g.p.queryBySummonerName("")
 			if err != nil {
-				l.append(err)
+				Append(err)
 				return
 			}
-			l.append(horse)
+			Append(fmt.Sprintf("%s : %s，最近KDA: %s", name, horse, kda))
 		}),
 		container.NewGridWithColumns(1),
 		container.NewGridWithColumns(1),
 		container.NewGridWithColumns(1),
 		widget.NewButton("保存", func() {
-			l.append(l.conf.ChooseChampSendMsgDelaySec)
-			err := l.conf.Update()
+			err := g.p.UpdateClientConf(g.conf)
 			if err != nil {
-				l.append("更新配置失败\n")
+				Append("保存失败", err)
 				return
 			}
+			Append("保存成功")
 		}))
 
 	box := container.NewGridWithColumns(1,
@@ -110,30 +124,44 @@ func (l *lol) LoadUI(app fyne.App) {
 			container.NewGridWithRows(2, widget.NewLabel("发送哪些马匹信息"), horseCheck),
 			container.NewGridWithRows(2, confirm, queryByPlayer),
 		),
-		container.NewScroll(l.output))
+		container.NewScroll(g.output))
 
 	w.SetContent(box)
 	w.Resize(resize(1000, 600))
 	w.Show()
 }
 
-func (l *lol) display(newtext string) {
-	l.output.SetText(newtext)
+func display(newtext string) {
+	GetLol().output.SetText(newtext)
 }
 
-func (l *lol) append(newtext ...interface{}) {
-	original := l.output.Text
+func Append(newtext ...interface{}) {
+	original := GetLol().output.Text
 	text := fmt.Sprint(newtext)
 	text = text[1 : len(text)-1]
-	l.output.SetText(original + fmt.Sprintf("%s : %s", time.Now().Format(layout), text))
+	GetLol().output.SetText(original + fmt.Sprintf("%s : %s\n", time.Now().Format(layout), text))
 }
 
 func resize(w float32, h float32) fyne.Size {
 	return fyne.NewSize(w, h)
 }
 
-func NewLol() *lol {
-	return &lol{
-		conf: getAll(),
+func newLol() *gui {
+	err := bootstrap.InitApp()
+	defer global.Cleanup()
+	if err != nil {
+		panic(fmt.Sprintf("初始化应用失败:%v\n", err))
 	}
+	prophet := NewProphet()
+	return &gui{
+		conf: getAll(),
+		p:    prophet,
+	}
+}
+
+func GetLol() *gui {
+	once.Do(func() {
+		lol = newLol()
+	})
+	return lol
 }
