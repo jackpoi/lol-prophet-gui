@@ -9,7 +9,6 @@ import (
 	"github.com/beastars1/lol-prophet-gui/bootstrap"
 	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
-	"log"
 	"sync"
 	"time"
 )
@@ -31,9 +30,7 @@ type gui struct {
 }
 
 func (g *gui) RunProphet() {
-	if err := g.p.Run(); err != nil {
-		log.Fatal(err)
-	}
+	g.p.Run()
 }
 
 func (g *gui) LoadUI(app fyne.App) {
@@ -147,11 +144,8 @@ func resize(w float32, h float32) fyne.Size {
 }
 
 func newLol() *gui {
-	err := bootstrap.InitApp()
+	bootstrap.InitApp()
 	defer global.Cleanup()
-	if err != nil {
-		panic(fmt.Sprintf("初始化应用失败:%v\n", err))
-	}
 	prophet := NewProphet()
 	return &gui{
 		conf: getAll(),

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
-	ginApp "github.com/beastars1/lol-prophet-gui/pkg/gin"
 	"github.com/beastars1/lol-prophet-gui/services/db/enity"
 	"github.com/beastars1/lol-prophet-gui/services/lcu"
 	"github.com/beastars1/lol-prophet-gui/services/lcu/models"
@@ -16,8 +15,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"os/signal"
 	"strings"
 	"sync"
 	"time"
@@ -25,9 +22,6 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/avast/retry-go"
 	"github.com/getsentry/sentry-go"
-	sentryGin "github.com/getsentry/sentry-go/gin"
-	"github.com/gin-contrib/pprof"
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -46,7 +40,6 @@ type (
 		lcuActive    bool
 		currSummoner *lcu.CurrSummoner
 		cancel       func()
-		api          *Api
 		mu           *sync.Mutex
 		GameState    GameState
 	}
@@ -76,6 +69,7 @@ const (
 	GameStateInGame      GameState = "inGame"
 	GameStateOther       GameState = "other"
 )
+
 const (
 	acpGBK = 936
 )
@@ -103,23 +97,22 @@ func NewProphet(opts ...ApplyOption) *Prophet {
 	} else {
 		opts = append(opts, WithProd())
 	}
-	p.api = &Api{p: p}
 	for _, fn := range opts {
 		fn(p.opts)
 	}
 	return p
 }
-func (p *Prophet) Run() error {
+
+func (p *Prophet) Run() {
 	go p.MonitorStart()
 	go p.captureStartMessage()
-	p.initGin()
 	Append(fmt.Sprintf("%s已启动 v%s", global.AppName, APPVersion))
-	// 监听，守护进程
-	return p.notifyQuit()
 }
+
 func (p *Prophet) isLcuActive() bool {
 	return p.lcuActive
 }
+
 func (p *Prophet) Stop() error {
 	if p.cancel != nil {
 		p.cancel()
@@ -127,6 +120,7 @@ func (p *Prophet) Stop() error {
 	// stop all task
 	return nil
 }
+
 func (p *Prophet) MonitorStart() {
 	for {
 		if !p.isLcuActive() {
@@ -150,46 +144,10 @@ func (p *Prophet) MonitorStart() {
 	}
 }
 
-// 监听Gin服务，直到退出程序
-func (p *Prophet) notifyQuit() error {
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-	g, c := errgroup.WithContext(p.ctx)
-	// http
-	g.Go(func() error {
-		err := p.httpSrv.ListenAndServe()
-		if err != nil || !errors.Is(err, http.ErrServerClosed) {
-			return err
-		}
-		return nil
-	})
-	// http-shutdown
-	g.Go(func() error {
-		<-c.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-		defer cancel()
-		return p.httpSrv.Shutdown(ctx)
-	})
-	// wait quit
-	g.Go(func() error {
-		for {
-			select {
-			case <-p.ctx.Done():
-				return p.ctx.Err()
-			case <-interrupt:
-				_ = p.Stop()
-			}
-		}
-	})
-	err := g.Wait()
-	if err != nil && !errors.Is(err, context.Canceled) {
-		return err
-	}
-	return nil
-}
 func (p *Prophet) initLcuClient(port int, token string) {
 	lcu.InitCli(port, token)
 }
+
 func (p *Prophet) initGameFlowMonitor(port int, authPwd string) error {
 	dialer := websocket.DefaultDialer
 	dialer.TLSClientConfig = &tls.Config{
@@ -263,6 +221,7 @@ func (p *Prophet) initGameFlowMonitor(port int, authPwd string) error {
 		// log.Printf("recv: %s", message)
 	}
 }
+
 func (p *Prophet) onGameFlowUpdate(gameFlow string) {
 	// clientCfg := global.GetClientConf()
 	logger.Debug("切换状态:" + gameFlow)
@@ -286,18 +245,20 @@ func (p *Prophet) onGameFlowUpdate(gameFlow string) {
 	default:
 		p.updateGameState(GameStateOther)
 	}
-
 }
+
 func (p *Prophet) updateGameState(state GameState) {
 	p.mu.Lock()
 	p.GameState = state
 	p.mu.Unlock()
 }
+
 func (p *Prophet) getGameState() GameState {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.GameState
 }
+
 func (p *Prophet) captureStartMessage() {
 	for i := 0; i < 5; i++ {
 		if global.GetUserInfo().IP != "" {
@@ -306,34 +267,6 @@ func (p *Prophet) captureStartMessage() {
 		time.Sleep(time.Second * 2)
 	}
 	sentry.CaptureMessage(global.AppName + "已启动")
-}
-
-func (p *Prophet) initGin() {
-	if p.opts.debug {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
-	engine := gin.New()
-	engine.Use(gin.Recovery())
-	engine.Use(gin.LoggerWithFormatter(ginApp.LogFormatter))
-	if p.opts.enablePprof {
-		pprof.RouteRegister(engine.Group(""))
-	}
-	engine.Use(ginApp.PrepareProc)
-	engine.Use(sentryGin.New(sentryGin.Options{
-		Repanic: true,
-		Timeout: 3 * time.Second,
-	}))
-	engine.Use(ginApp.Cors())
-	engine.Use(ginApp.ErrHandler)
-	RegisterRoutes(engine, p.api)
-
-	srv := &http.Server{
-		Addr:    p.opts.httpAddr,
-		Handler: engine,
-	}
-	p.httpSrv = srv
 }
 
 // ChampionSelectStart 选择英雄时进行核心逻辑处理：获取人员、计算得分、发送信息
@@ -352,10 +285,7 @@ func (p Prophet) ChampionSelectStart() {
 			continue
 		}
 	}
-	// if !false && global.IsDevMode() {
-	// 	summonerIDList = []int64{2964390005, 4103784618, 4132401993, 4118593599, 4019221688}
-	// 	// summonerIDList = []int64{4006944917}
-	// }
+
 	logger.Debug("队伍人员列表:", zap.Any("summonerIDList", summonerIDList))
 	// 查询所有用户的信息并计算得分
 	g := errgroup.Group{}
@@ -439,9 +369,11 @@ func (p Prophet) ChampionSelectStart() {
 		_ = SendConversationMsg(mergedMsg, conversationID)
 	}
 }
+
 func (p Prophet) AcceptGame() {
 	_ = lcu.AcceptGame()
 }
+
 func (p Prophet) CalcEnemyTeamScore() {
 	// 获取当前游戏进程
 	session, err := lcu.QueryGameFlowSession()
@@ -458,10 +390,7 @@ func (p Prophet) CalcEnemyTeamScore() {
 	selfTeamUsers, enemyTeamUsers := getAllUsersFromSession(selfID, session)
 	_ = selfTeamUsers
 	summonerIDList := enemyTeamUsers
-	// if !false && global.IsDevMode() {
-	// 	summonerIDList = []int64{2964390005, 4103784618, 4132401993, 4118593599, 4019221688}
-	// 	// summonerIDList = []int64{4006944917}
-	// }
+
 	logger.Debug("敌方队伍人员列表:", zap.Any("summonerIDList", summonerIDList))
 	if len(summonerIDList) == 0 {
 		return

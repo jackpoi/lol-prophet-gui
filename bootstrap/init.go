@@ -114,14 +114,13 @@ func initLog(cfg *conf.LogConf) {
 	global.Logger = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1)).Sugar()
 }
 
-func InitApp() error {
+func InitApp() {
 	admin.MustRunWithAdmin()
 	initConsole()
 	initConf()
 	initLog(&global.Conf.Log)
 	initLib()
 	initGlobal()
-	return nil
 }
 
 func initConsole() {
