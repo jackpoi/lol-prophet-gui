@@ -1,4 +1,4 @@
-package main
+package lol_prophet_gui
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
+	"github.com/beastars1/lol-prophet-gui/conf"
 	"time"
 )
 
@@ -15,11 +16,11 @@ const (
 
 type lol struct {
 	output *widget.Entry
-	conf   *UpdateClientConfReq
+	conf   *conf.Client
 	window fyne.Window
 }
 
-func (l *lol) loadUI(app fyne.App) {
+func (l *lol) LoadUI(app fyne.App) {
 	l.output = widget.NewMultiLineEntry()
 	l.output.Resize(resize(800, 300))
 	l.output.TextStyle.Monospace = false
@@ -95,7 +96,7 @@ func (l *lol) loadUI(app fyne.App) {
 		container.NewGridWithColumns(1),
 		widget.NewButton("保存", func() {
 			l.append(l.conf.ChooseChampSendMsgDelaySec)
-			err := l.conf.update()
+			err := l.conf.Update()
 			if err != nil {
 				l.append("更新配置失败\n")
 				return
@@ -131,7 +132,7 @@ func resize(w float32, h float32) fyne.Size {
 	return fyne.NewSize(w, h)
 }
 
-func newLol() *lol {
+func NewLol() *lol {
 	return &lol{
 		conf: getAll(),
 	}

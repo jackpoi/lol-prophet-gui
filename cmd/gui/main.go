@@ -2,6 +2,9 @@ package main
 
 import (
 	"fyne.io/fyne/v2/app"
+	gui "github.com/beastars1/lol-prophet-gui"
+	"github.com/beastars1/lol-prophet-gui/bootstrap"
+
 	"github.com/flopp/go-findfont"
 	"os"
 	"strings"
@@ -21,8 +24,9 @@ func main() {
 	defer os.Unsetenv("FYNE_FONT")
 	app := app.New()
 
-	lol := newLol()
-	lol.loadUI(app)
+	lol := gui.NewLol()
+	lol.LoadUI(app)
 
+	go bootstrap.Start()
 	app.Run()
 }
