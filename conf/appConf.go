@@ -33,10 +33,6 @@ type (
 		MaxAge     int                `default:"7" env:"logMaxAge"`
 		Compress   bool               `default:"true" env:"logCompress"`
 	}
-	BuffApi struct {
-		Url     string `json:"url"`
-		Timeout int    `json:"timeout"`
-	}
 	RateItemConf struct {
 		Limit     float64      `json:"limit" required:"true"`     // >30%
 		ScoreConf [][2]float64 `json:"scoreConf" required:"true"` // [ [最低人头限制,加分数] ]
@@ -61,7 +57,7 @@ type (
 		HurtRate           []RateItemConf    `json:"hurtRate" required:"true"`           // 伤害占比
 		AssistRate         []RateItemConf    `json:"assistRate" required:"true"`         // 助攻占比
 		AdjustKDA          [2]float64        `json:"adjustKDA" required:"true"`          // kda
-		Horse              [6]HorseScoreConf `json:"horse" required:"true"`
+		Horse              [5]HorseScoreConf `json:"horse" required:"true"`
 		MergeMsg           bool              `json:"mergeMsg"` // 是否合并消息为一条
 	}
 )

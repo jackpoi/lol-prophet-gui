@@ -12,7 +12,6 @@ hh-lol-prophet: [https://github.com/real-web-world/hh-lol-prophet](https://githu
 |:---:|:----:|
 | 150 | 汗血宝马 |
 | 125 | 上等马  |
-| 110 | 中等马  |
-| 90  | 下等马  |
-| 50  |  牛马  |
-| <50 | 没有马  |
+| 105 | 中等马  |
+| 95  | 下等马  |
+| <95 |  牛马  |

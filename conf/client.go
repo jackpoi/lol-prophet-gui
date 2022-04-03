@@ -22,8 +22,8 @@ type (
 		AutoBanChampID                 int       `json:"autoBanChampID"`                 // 自动ban人
 		AutoSendTeamHorse              bool      `json:"autoSendTeamHorse"`              // 是否自动发送消息到选人界面
 		ShouldSendSelfHorse            bool      `json:"shouldSendSelfHorse"`            // 是否发送自己马匹信息
-		HorseNameConf                  [6]string `json:"horseNameConf"`                  // 马匹名称配置
-		ChooseSendHorseMsg             [6]bool   `json:"chooseSendHorseMsg"`             // 选择发送哪些马匹信息
+		HorseNameConf                  [5]string `json:"horseNameConf"`                  // 马匹名称配置
+		ChooseSendHorseMsg             [5]bool   `json:"chooseSendHorseMsg"`             // 选择发送哪些马匹信息
 		ChooseChampSendMsgDelaySec     int       `json:"chooseChampSendMsgDelaySec"`     // 选人阶段延迟几秒发送
 		ShouldInGameSaveMsgToClipBoard bool      `json:"shouldInGameSaveMsgToClipBoard"` // 进入对局后保存敌方马匹消息到剪切板中
 		ShouldAutoOpenBrowser          *bool     `json:"shouldAutoOpenBrowser"`          // 是否自动打开浏览器

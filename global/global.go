@@ -2,8 +2,8 @@ package global
 
 import (
 	"github.com/beastars1/lol-prophet-gui/conf"
-	"github.com/beastars1/lol-prophet-gui/pkg/logger"
-	"log"
+	level "github.com/beastars1/lol-prophet-gui/pkg/logger"
+	"github.com/beastars1/lol-prophet-gui/services/logger"
 	"sync"
 
 	"go.uber.org/zap"
@@ -35,7 +35,16 @@ const (
 	horse3 = "中等马"
 	horse4 = "下等马"
 	horse5 = "牛马"
-	horse6 = "没有马"
+)
+
+var (
+	horses = [5]conf.HorseScoreConf{
+		{Score: 150, Name: horse1},
+		{Score: 125, Name: horse2},
+		{Score: 105, Name: horse3},
+		{Score: 95, Name: horse4},
+		{Score: 0.0001, Name: horse5},
+	}
 )
 
 var (
@@ -46,8 +55,8 @@ var (
 		AutoBanChampID:                 0,
 		AutoSendTeamHorse:              true,
 		ShouldSendSelfHorse:            true,
-		HorseNameConf:                  [6]string{horse1, horse2, horse3, horse4, horse5, horse6},
-		ChooseSendHorseMsg:             [6]bool{true, true, true, true, true, true},
+		HorseNameConf:                  [5]string{horse1, horse2, horse3, horse4, horse5},
+		ChooseSendHorseMsg:             [5]bool{true, true, true, true, true},
 		ChooseChampSendMsgDelaySec:     3,
 		ShouldInGameSaveMsgToClipBoard: true,
 		ShouldAutoOpenBrowser:          &defaultShouldAutoOpenBrowserCfg,
@@ -62,7 +71,7 @@ var (
 			Enable: true,
 		},
 		Log: conf.LogConf{
-			Level:    logger.LevelInfoStr,
+			Level:    level.LevelInfoStr,
 			Filepath: defaultLogPath,
 		},
 		CalcScore: conf.CalcScoreConf{
@@ -121,15 +130,8 @@ var (
 				}},
 			},
 			AdjustKDA: [2]float64{2, 5},
-			Horse: [6]conf.HorseScoreConf{
-				{Score: 150, Name: horse1},
-				{Score: 125, Name: horse2},
-				{Score: 110, Name: horse3},
-				{Score: 90, Name: horse4},
-				{Score: 50, Name: horse5},
-				{Score: 0.0001, Name: horse6},
-			},
-			MergeMsg: false,
+			Horse:     horses,
+			MergeMsg:  false,
 		},
 	}
 	userInfo     = UserInfo{}
@@ -157,7 +159,7 @@ func GetUserInfo() UserInfo {
 func Cleanup() {
 	for name, cleanup := range Cleanups {
 		if err := cleanup(); err != nil {
-			log.Printf("%s cleanup err:%v\n", name, err)
+			logger.Info("%s cleanup err:%v\n", name, err)
 		}
 	}
 	if fn, ok := Cleanups[LogWriterCleanupKey]; ok {

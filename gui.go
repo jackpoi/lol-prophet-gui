@@ -55,23 +55,20 @@ func (g *gui) LoadUI(app fyne.App) {
 	horse2Name := binding.BindString(&g.conf.HorseNameConf[2])
 	horse3Name := binding.BindString(&g.conf.HorseNameConf[3])
 	horse4Name := binding.BindString(&g.conf.HorseNameConf[4])
-	horse5Name := binding.BindString(&g.conf.HorseNameConf[5])
-	horseConf := container.NewGridWithColumns(6,
+	horseConf := container.NewGridWithColumns(5,
 		widget.NewEntryWithData(horse0Name),
 		widget.NewEntryWithData(horse1Name),
 		widget.NewEntryWithData(horse2Name),
 		widget.NewEntryWithData(horse3Name),
 		widget.NewEntryWithData(horse4Name),
-		widget.NewEntryWithData(horse5Name),
 	)
 
-	horseCheck := container.NewGridWithColumns(6,
+	horseCheck := container.NewGridWithColumns(5,
 		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[0])), widget.NewLabelWithData(horse0Name)),
 		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[1])), widget.NewLabelWithData(horse1Name)),
 		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[2])), widget.NewLabelWithData(horse2Name)),
 		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[3])), widget.NewLabelWithData(horse3Name)),
 		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[4])), widget.NewLabelWithData(horse4Name)),
-		container.NewHBox(widget.NewCheckWithData("", binding.BindBool(&g.conf.ChooseSendHorseMsg[5])), widget.NewLabelWithData(horse5Name)),
 	)
 
 	player := widget.NewEntry()
