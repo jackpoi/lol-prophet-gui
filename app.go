@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	defaultScore       = 100 // 默认分数
-	minGameDurationSec = 15 * 60
+	defaultScore           = 100     // 默认分数
+	minGameDurationSec     = 15 * 60 // 正常5v5时间限制 15min
+	aramMinGameDurationSec = 12 * 60 // 大乱斗时间限制 12min
 )
 
 var (
@@ -207,7 +208,12 @@ func listGameHistory(summonerID int64) ([]lcu.GameInfo, error) {
 			gameItem.QueueId != models.RankFlexQueueID {
 			continue
 		}
-		if gameItem.GameDuration < minGameDurationSec {
+		// 过滤掉游戏时长不足的大乱斗对局
+		if gameItem.QueueId == models.ARAMQueueID && gameItem.GameDuration < aramMinGameDurationSec {
+			continue
+		}
+		// 过滤掉游戏时长不足的峡谷对局
+		if gameItem.QueueId != models.ARAMQueueID && gameItem.GameDuration < minGameDurationSec {
 			continue
 		}
 		fmtList = append(fmtList, gameItem)

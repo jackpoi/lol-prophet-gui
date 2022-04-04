@@ -136,7 +136,7 @@ func (g *gui) queryHorse(player string) {
 		Append(err)
 		return
 	}
-	Append(fmt.Sprintf("%s：%s 得分：%.2f 近期KDA：%s", name, horse, score, kda))
+	Append(fmt.Sprintf("%s：%s 得分：%.1f 近期KDA：%s", name, horse, score, kda))
 }
 
 func (g *gui) update() {

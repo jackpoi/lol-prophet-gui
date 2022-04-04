@@ -316,7 +316,7 @@ func (p Prophet) ChampionSelectStart() {
 			currKDAMsg = currKDAMsg[:len(currKDAMsg)-1]
 		}
 
-		msg := fmt.Sprintf("本局%s：%s 得分：%.2f  近期KDA：%s", horse, scoreInfo.SummonerName, scoreInfo.Score, currKDAMsg)
+		msg := fmt.Sprintf("本局%s：%s 得分：%.1f  近期KDA：%s", horse, scoreInfo.SummonerName, scoreInfo.Score, currKDAMsg)
 		//log.Printf(msg)
 		Append(msg)
 		<-sendConversationMsgDelayCtx.Done()
@@ -431,7 +431,7 @@ func (p Prophet) CalcEnemyTeamScore() {
 		if len(currKDAMsg) > 0 {
 			currKDAMsg = currKDAMsg[:len(currKDAMsg)-1]
 		}
-		msg := fmt.Sprintf("敌方%s：%s 得分：%.2f  近期KDA：%s", horse, scoreInfo.SummonerName, scoreInfo.Score, currKDAMsg)
+		msg := fmt.Sprintf("敌方%s：%s 得分：%.1f  近期KDA：%s", horse, scoreInfo.SummonerName, scoreInfo.Score, currKDAMsg)
 		Append(msg)
 		allMsg += msg + "\n"
 	}

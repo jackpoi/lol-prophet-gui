@@ -9,5 +9,5 @@ const (
 )
 
 func init() {
-
+	// todo retry
 }
