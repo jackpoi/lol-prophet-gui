@@ -1,8 +1,6 @@
 # lol-prophet-gui
 
-lol-prophet with gui
-
-hh-lol-prophet: [https://github.com/real-web-world/hh-lol-prophet](https://github.com/real-web-world/hh-lol-prophet)
+lol 看看谁是牛马，分析己方玩家近期数据，发送/复制对应的🐎、kda、得分
 
 ### 得分规则
 
@@ -15,3 +13,5 @@ hh-lol-prophet: [https://github.com/real-web-world/hh-lol-prophet](https://githu
 | 105 | 中等马  |
 | 95  | 下等马  |
 | <95 |  牛马  |
+
+基于 hh-lol-prophet: [https://github.com/real-web-world/hh-lol-prophet](https://github.com/real-web-world/hh-lol-prophet)

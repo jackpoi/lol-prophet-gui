@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/avast/retry-go"
 	"github.com/beastars1/lol-prophet-gui/global"
-	"github.com/beastars1/lol-prophet-gui/pkg/bdk"
+	"github.com/beastars1/lol-prophet-gui/pkg/tool"
 	"github.com/beastars1/lol-prophet-gui/services/lcu"
 	"github.com/beastars1/lol-prophet-gui/services/lcu/models"
 	"github.com/beastars1/lol-prophet-gui/services/logger"
@@ -455,7 +455,7 @@ func calcUserGameScore(summonerID int64, gameSummary lcu.GameSummary) (*lcu.Scor
 func listMemberVisionScore(gameSummary *lcu.GameSummary, memberParticipantIDList []int) []int {
 	res := make([]int, 0, 4)
 	for _, participant := range gameSummary.Participants {
-		if !bdk.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
+		if !tool.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
 			continue
 		}
 		res = append(res, participant.Stats.VisionScore)
@@ -466,7 +466,7 @@ func listMemberVisionScore(gameSummary *lcu.GameSummary, memberParticipantIDList
 func listMemberMoney2hurtRate(gameSummary *lcu.GameSummary, memberParticipantIDList []int) []float64 {
 	res := make([]float64, 0, 4)
 	for _, participant := range gameSummary.Participants {
-		if !bdk.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
+		if !tool.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
 			continue
 		}
 		res = append(res, float64(participant.Stats.TotalDamageDealtToChampions)/float64(participant.Stats.
@@ -478,7 +478,7 @@ func listMemberMoney2hurtRate(gameSummary *lcu.GameSummary, memberParticipantIDL
 func listMemberMoney(gameSummary *lcu.GameSummary, memberParticipantIDList []int) []int {
 	res := make([]int, 0, 4)
 	for _, participant := range gameSummary.Participants {
-		if !bdk.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
+		if !tool.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
 			continue
 		}
 		res = append(res, participant.Stats.GoldEarned)
@@ -489,7 +489,7 @@ func listMemberMoney(gameSummary *lcu.GameSummary, memberParticipantIDList []int
 func listMemberJoinTeamKillRates(gameSummary *lcu.GameSummary, totalKill int, memberParticipantIDList []int) []float64 {
 	res := make([]float64, 0, 4)
 	for _, participant := range gameSummary.Participants {
-		if !bdk.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
+		if !tool.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
 			continue
 		}
 		res = append(res, float64(participant.Stats.Assists+participant.Stats.Kills)/float64(
@@ -501,7 +501,7 @@ func listMemberJoinTeamKillRates(gameSummary *lcu.GameSummary, totalKill int, me
 func listMemberHurt(gameSummary *lcu.GameSummary, memberParticipantIDList []int) []int {
 	res := make([]int, 0, 4)
 	for _, participant := range gameSummary.Participants {
-		if !bdk.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
+		if !tool.InArrayInt(participant.ParticipantId, memberParticipantIDList) {
 			continue
 		}
 		res = append(res, participant.Stats.TotalDamageDealtToChampions)

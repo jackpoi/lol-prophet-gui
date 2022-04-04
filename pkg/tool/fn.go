@@ -1,4 +1,4 @@
-package bdk
+package tool
 
 import (
 	"math/rand"
@@ -13,6 +13,7 @@ func IsFile(filename string) bool {
 	}
 	return !fd.IsDir()
 }
+
 func RandomAlphaNum(lengthParam ...int) []byte {
 	length := 16
 	if len(lengthParam) > 0 {
@@ -26,6 +27,7 @@ func RandomAlphaNum(lengthParam ...int) []byte {
 	}
 	return result
 }
+
 func InArrayInt(a int, arr []int) bool {
 	for _, v := range arr {
 		if v == a {

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
-	"github.com/beastars1/lol-prophet-gui/pkg/bdk"
 	"github.com/beastars1/lol-prophet-gui/pkg/logger"
+	"github.com/beastars1/lol-prophet-gui/pkg/tool"
 	"github.com/beastars1/lol-prophet-gui/pkg/windows/admin"
 	"github.com/beastars1/lol-prophet-gui/services/db/enity"
 	"github.com/beastars1/lol-prophet-gui/services/ws"
@@ -35,11 +35,10 @@ const (
 
 func initConf() {
 	_ = godotenv.Load(".env")
-	if bdk.IsFile(".env.local") {
+	if tool.IsFile(".env.local") {
 		_ = godotenv.Overload(".env.local")
 	}
-	// confPath := "./config/config.json"
-	// err := configor.Load(global.Conf, confPath)
+
 	*global.Conf = global.DefaultAppConf
 	err := configor.Load(global.Conf)
 	if err != nil {
@@ -61,7 +60,7 @@ func initClientConf() (err error) {
 	gormCfg := &gorm.Config{
 		Logger: dbLogger,
 	}
-	if !bdk.IsFile(dbPath) {
+	if !tool.IsFile(dbPath) {
 		db, err = gorm.Open(sqlite.Open(dbPath), gormCfg)
 		bts, _ := json.Marshal(global.DefaultClientConf)
 		err = db.Exec(enity.InitLocalClientSql, enity.LocalClientConfKey, string(bts)).Error

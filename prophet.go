@@ -461,6 +461,8 @@ loop:
 		}
 	}
 	clientCfg := global.GetClientConf()
+	//Append("AutoPickChampID:", clientCfg.AutoPickChampID)
+	//Append("userActionID:", userActionID)
 	if clientCfg.AutoPickChampID > 0 && isSelfPick {
 		_ = lcu.PickChampion(clientCfg.AutoPickChampID, userActionID)
 	}

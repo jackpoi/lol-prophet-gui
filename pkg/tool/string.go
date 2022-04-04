@@ -1,4 +1,4 @@
-package bdk
+package tool
 
 import "unsafe"
 

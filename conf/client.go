@@ -28,18 +28,6 @@ type (
 		ShouldInGameSaveMsgToClipBoard bool      `json:"shouldInGameSaveMsgToClipBoard"` // 进入对局后保存敌方马匹消息到剪切板中
 		ShouldAutoOpenBrowser          *bool     `json:"shouldAutoOpenBrowser"`          // 是否自动打开浏览器
 	}
-	UpdateClientConfReq struct {
-		AutoAcceptGame                 *bool      `json:"autoAcceptGame"`
-		AutoPickChampID                *int       `json:"autoPickChampID"`
-		AutoBanChampID                 *int       `json:"autoBanChampID"`
-		AutoSendTeamHorse              *bool      `json:"autoSendTeamHorse"`
-		ShouldSendSelfHorse            *bool      `json:"shouldSendSelfHorse"`
-		HorseNameConf                  *[6]string `json:"horseNameConf"`
-		ChooseSendHorseMsg             *[6]bool   `json:"chooseSendHorseMsg"`
-		ChooseChampSendMsgDelaySec     *int       `json:"chooseChampSendMsgDelaySec"`
-		ShouldInGameSaveMsgToClipBoard *bool      `json:"shouldInGameSaveMsgToClipBoard"`
-		ShouldAutoOpenBrowser          *bool      `json:"shouldAutoOpenBrowser"`
-	}
 )
 
 func ValidClientConf(conf *Client) error {

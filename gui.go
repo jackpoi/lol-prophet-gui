@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 	"github.com/beastars1/lol-prophet-gui/bootstrap"
+	"github.com/beastars1/lol-prophet-gui/champion"
 	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
 	"sync"
@@ -39,14 +40,24 @@ func (g *gui) LoadUI(app fyne.App) {
 
 	w := app.NewWindow(global.AppName)
 
-	checkConf := container.NewGridWithColumns(4,
-		widget.NewCheckWithData("自动接受对局", binding.BindBool(&g.conf.AutoAcceptGame)),
-		widget.NewCheckWithData("选择英雄界面自动发送", binding.BindBool(&g.conf.AutoSendTeamHorse)),
-		widget.NewCheckWithData("发送自己马匹信息", binding.BindBool(&g.conf.ShouldSendSelfHorse)),
+	championSelect := widget.NewSelect(champion.GetChampions(), func(s string) {
+		g.conf.AutoPickChampID = champion.GetKeyByName(s)
+	})
+	championSelect.SetSelectedIndex(0)
+	checkConf := container.NewGridWithColumns(3,
 		container.NewHBox(
+			widget.NewCheckWithData("自动接受对局", binding.BindBool(&g.conf.AutoAcceptGame)),
+			widget.NewCheckWithData("发送自己马匹信息", binding.BindBool(&g.conf.ShouldSendSelfHorse)),
+		),
+		container.NewHBox(
+			widget.NewCheckWithData("", binding.BindBool(&g.conf.AutoSendTeamHorse)),
 			widget.NewLabel("选择英雄"),
 			widget.NewEntryWithData(binding.IntToString(binding.BindInt(&g.conf.ChooseChampSendMsgDelaySec))),
-			widget.NewLabel("秒后发送"),
+			widget.NewLabel("秒后自动发送"),
+		),
+		container.NewHBox(
+			widget.NewLabel("自动选择英雄"),
+			championSelect,
 		),
 	)
 
@@ -56,11 +67,11 @@ func (g *gui) LoadUI(app fyne.App) {
 	horse3Name := binding.BindString(&g.conf.HorseNameConf[3])
 	horse4Name := binding.BindString(&g.conf.HorseNameConf[4])
 	horseConf := container.NewGridWithColumns(5,
-		widget.NewEntryWithData(horse0Name),
-		widget.NewEntryWithData(horse1Name),
-		widget.NewEntryWithData(horse2Name),
-		widget.NewEntryWithData(horse3Name),
-		widget.NewEntryWithData(horse4Name),
+		newBindEntry(horse0Name),
+		newBindEntry(horse1Name),
+		newBindEntry(horse2Name),
+		newBindEntry(horse3Name),
+		newBindEntry(horse4Name),
 	)
 
 	horseCheck := container.NewGridWithColumns(5,
@@ -113,6 +124,12 @@ func (g *gui) LoadUI(app fyne.App) {
 	w.Show()
 }
 
+func newBindEntry(data binding.String) *widget.Entry {
+	entry := widget.NewEntry()
+	entry.Bind(data)
+	return entry
+}
+
 func (g *gui) queryHorse(player string) {
 	name, score, kda, horse, err := g.p.queryBySummonerName(player)
 	if err != nil {
@@ -151,7 +168,7 @@ func newLol() *gui {
 	defer global.Cleanup()
 	prophet := NewProphet()
 	return &gui{
-		conf: getAll(),
+		conf: global.GetClientConf(),
 		p:    prophet,
 	}
 }
