@@ -13,10 +13,20 @@ import (
 var (
 	championsMap = map[string]int{}
 	champions    = []string{"无"}
+	Version      string
 )
 
 func init() {
-	championList := GetChampionList("12.6.1")
+	versionList := GetVersions()
+	var championList []championInfo
+	for _, v := range versionList {
+		version := string(v)
+		championList = getChampionList(version)
+		if len(championList) > 0 {
+			Version = version
+			break
+		}
+	}
 	for _, v := range championList {
 		championsMap[v.Name], _ = strconv.Atoi(v.Key)
 		champions = append(champions, v.Name)
@@ -45,7 +55,7 @@ type championInfo struct {
 	Title string `json:"title"`
 }
 
-func GetChampionList(version string) []championInfo {
+func getChampionList(version string) []championInfo {
 	body := tool.HttpGet(fmt.Sprintf(championListUrl, version))
 	expr := `"key([\s\S]*?)blurb"`
 	str := regexpMatch(string(body), expr)
@@ -53,6 +63,10 @@ func GetChampionList(version string) []championInfo {
 }
 
 func formatChampion(original [][]string) []championInfo {
+	var champions []championInfo
+	if original == nil {
+		return champions
+	}
 	builder := strings.Builder{}
 	builder.WriteString("[")
 	for i, s := range original {
@@ -64,7 +78,6 @@ func formatChampion(original [][]string) []championInfo {
 		builder.WriteString("}")
 	}
 	builder.WriteString("]")
-	var champions []championInfo
 	s := builder.String()
 	err := json.Unmarshal([]byte(s), &champions)
 	if err != nil {

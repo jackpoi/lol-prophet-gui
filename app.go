@@ -95,6 +95,7 @@ func GetUserScore(summonerID int64) (*lcu.UserScore, error) {
 					scope.SetLevel(sentry.LevelError)
 					scope.SetExtra("info", info)
 					scope.SetExtra("gameID", info.GameId)
+					scope.SetExtra("gameSummary", gameSummary)
 					scope.SetExtra("error", err.Error())
 					scope.SetExtra("errorVerbose", errors.Errorf("%+v", err))
 					sentry.CaptureMessage("获取游戏对局详细信息失败")

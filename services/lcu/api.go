@@ -901,7 +901,7 @@ func QueryGameSummary(gameID int64) (*GameSummary, error) {
 		return nil, err
 	}
 	if data.CommonResp.ErrorCode != "" {
-		return nil, errors.New(fmt.Sprintf("查询对局详情失败 :%s ,gameID: %d", data.CommonResp.Message, gameID))
+		return data, errors.New(fmt.Sprintf("查询对局详情失败 :%s ,gameID: %d", data.CommonResp.Message, gameID))
 	}
 	return data, nil
 }

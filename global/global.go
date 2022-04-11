@@ -53,7 +53,7 @@ var (
 		AutoAcceptGame:                 false,
 		AutoPickChampID:                0,
 		AutoBanChampID:                 0,
-		AutoSendTeamHorse:              true,
+		AutoSendTeamHorse:              false,
 		ShouldSendSelfHorse:            true,
 		HorseNameConf:                  [5]string{horse1, horse2, horse3, horse4, horse5},
 		ChooseSendHorseMsg:             [5]bool{true, true, true, true, true},

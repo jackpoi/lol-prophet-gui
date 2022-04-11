@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"encoding/json"
+	"github.com/beastars1/lol-prophet-gui/champion"
 	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
 	"github.com/beastars1/lol-prophet-gui/pkg/logger"
@@ -193,8 +194,9 @@ func initSentry(dsn string) error {
 		userInfo := global.GetUserInfo()
 		sentry.ConfigureScope(func(scope *sentry.Scope) {
 			scope.SetContext("lol", map[string]interface{}{
-				"ip":      userInfo.IP,
-				"version": global.AppBuildInfo.Version,
+				"IP":               userInfo.IP,
+				"Version":          global.AppBuildInfo.Version,
+				"Champion Version": champion.Version,
 				// "mac":   userInfo.Mac,
 				// "cpuID": userInfo.CpuID,
 			})
