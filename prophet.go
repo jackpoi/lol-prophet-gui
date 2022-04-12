@@ -214,7 +214,10 @@ func (p *Prophet) onGameFlowUpdate(gameFlow string) {
 	switch gameFlow {
 	case string(models.GameFlowChampionSelect):
 		Append("进入英雄选择阶段，正在计算分数")
-		sentry.CaptureMessage("进入英雄选择阶段，正在计算分数")
+		sentry.WithScope(func(scope *sentry.Scope) {
+			scope.SetTag("player", p.currSummoner.DisplayName)
+			sentry.CaptureMessage("进入英雄选择阶段，正在计算分数")
+		})
 		p.updateGameState(GameStateChampSelect)
 		go p.ChampionSelectStart()
 	case string(models.GameFlowNone):

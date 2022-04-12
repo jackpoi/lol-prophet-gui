@@ -180,10 +180,10 @@ func initSentry(dsn string) error {
 		sampleRate = 1.0
 	}
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn:        dsn,
-		Debug:      isDebugMode,
-		SampleRate: sampleRate,
-		//Release:     lol_prophet_gui.Commit,
+		Dsn:         dsn,
+		Debug:       isDebugMode,
+		SampleRate:  sampleRate,
+		Release:     global.Commit,
 		Environment: global.GetEnv(),
 	})
 	if err == nil {
@@ -195,7 +195,7 @@ func initSentry(dsn string) error {
 		sentry.ConfigureScope(func(scope *sentry.Scope) {
 			scope.SetContext("lol", map[string]interface{}{
 				"IP":               userInfo.IP,
-				"Version":          global.AppBuildInfo.Version,
+				"Version":          global.Version,
 				"Champion Version": champion.Version,
 				// "mac":   userInfo.Mac,
 				// "cpuID": userInfo.CpuID,

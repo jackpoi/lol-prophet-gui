@@ -11,12 +11,6 @@ import (
 )
 
 type (
-	AppInfo struct {
-		Version   string
-		Commit    string
-		BuildUser string
-		BuildTime string
-	}
 	UserInfo struct {
 		IP string `json:"ip"`
 	}
@@ -27,6 +21,8 @@ const (
 	sentryDsn           = "https://815bc0eb2615452caa81e3ccb536ce05@o1184940.ingest.sentry.io/6303327"
 	defaultLogPath      = "./logs/lol-prophet.log"
 	AppName             = "LoL Prophet"
+	Commit              = "dev"
+	Version             = "1.3"
 )
 
 const (
@@ -134,13 +130,12 @@ var (
 			MergeMsg:  false,
 		},
 	}
-	userInfo     = UserInfo{}
-	confMu       = sync.Mutex{}
-	Conf         = new(conf.AppConf)
-	ClientConf   = new(conf.Client)
-	Logger       *zap.SugaredLogger
-	Cleanups     = make(map[string]func() error)
-	AppBuildInfo = AppInfo{}
+	userInfo   = UserInfo{}
+	confMu     = sync.Mutex{}
+	Conf       = new(conf.AppConf)
+	ClientConf = new(conf.Client)
+	Logger     *zap.SugaredLogger
+	Cleanups   = make(map[string]func() error)
 )
 
 // DB
@@ -229,8 +224,4 @@ func SetClientConf(cfg *conf.Client) *conf.Client {
 		ClientConf.ShouldAutoOpenBrowser = cfg.ShouldAutoOpenBrowser
 	}
 	return ClientConf
-}
-
-func SetAppInfo(info AppInfo) {
-	AppBuildInfo = info
 }

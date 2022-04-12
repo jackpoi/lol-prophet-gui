@@ -94,6 +94,7 @@ func GetUserScore(summonerID int64) (*lcu.UserScore, error) {
 				sentry.WithScope(func(scope *sentry.Scope) {
 					scope.SetLevel(sentry.LevelError)
 					scope.SetExtra("info", info)
+					scope.SetExtra("player", info.ParticipantIdentities[0].Player.SummonerName)
 					scope.SetExtra("gameID", info.GameId)
 					scope.SetExtra("gameSummary", gameSummary)
 					scope.SetExtra("error", err.Error())
