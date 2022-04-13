@@ -27,25 +27,25 @@ type releaseInfo struct {
 	Body string `json:"body"`
 }
 
-func (r releaseInfo) hasNewVersion() (bool, string) {
+func (r releaseInfo) hasNewVersion() (ok bool, downloadUrl, info string) {
 	currVersion := global.Version
 	latestVersion := r.TagName[1:]
-	if currVersion < latestVersion {
+	if currVersion > latestVersion {
 		// 有新版本
-		return true, r.Assets[0].BrowserDownloadUrl
+		return true, r.Assets[0].BrowserDownloadUrl, r.Body
 	}
-	return false, ""
+	return false, "", ""
 }
 
-func CheckUpdate() (bool, string) {
+func CheckUpdate() (ok bool, downloadUrl, info string) {
 	body := tool.HttpGet(releaseInfoUrl)
 	var releaseInfo = releaseInfo{}
 	err := json.Unmarshal(body, &releaseInfo)
 	if err != nil {
-		return false, ""
+		return false, "", ""
 	}
-	if ok, downloadUrl := releaseInfo.hasNewVersion(); ok {
-		return ok, downloadUrl
+	if ok, downloadUrl, info := releaseInfo.hasNewVersion(); ok {
+		return ok, downloadUrl, info
 	}
-	return false, ""
+	return false, "", ""
 }
