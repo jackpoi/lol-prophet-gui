@@ -22,7 +22,7 @@ func init() {
 	for _, v := range versionList {
 		version := string(v)
 		championList = getChampionList(version)
-		if len(championList) > 0 {
+		if championList != nil && len(championList) > 0 {
 			Version = version
 			break
 		}
@@ -57,6 +57,9 @@ type championInfo struct {
 
 func getChampionList(version string) []championInfo {
 	body := tool.HttpGet(fmt.Sprintf(championListUrl, version))
+	if body == nil {
+		return nil
+	}
 	expr := `"key([\s\S]*?)blurb"`
 	str := regexpMatch(string(body), expr)
 	return formatChampion(str)

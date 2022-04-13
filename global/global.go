@@ -22,7 +22,8 @@ const (
 	defaultLogPath      = "./logs/lol-prophet.log"
 	AppName             = "LoL Prophet"
 	Commit              = "dev"
-	Version             = "1.3"
+	Version             = "1.4"
+	ProjectUrl          = "https://github.com/beastars1/lol-prophet-gui"
 )
 
 const (

@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/beastars1/lol-prophet-gui/champion"
 	"github.com/beastars1/lol-prophet-gui/conf"
 	"github.com/beastars1/lol-prophet-gui/global"
 	"github.com/beastars1/lol-prophet-gui/services/db/enity"
@@ -99,7 +98,13 @@ func NewProphet(opts ...ApplyOption) *Prophet {
 func (p *Prophet) Run() {
 	go p.MonitorStart()
 	go p.captureStartMessage()
-	Append(fmt.Sprintf("%s已启动，当前英雄列表版本:%s", global.AppName, champion.Version))
+	Append(fmt.Sprintf("%s已启动，当前版本: %s", global.AppName, global.Version))
+	Append(fmt.Sprintf("项目地址: %s", global.ProjectUrl))
+	go func() {
+		if ok, downloadUrl := CheckUpdate(); ok {
+			Append(fmt.Sprintf("发现新版本，下载地址: %s", downloadUrl))
+		}
+	}()
 }
 
 func (p *Prophet) isLcuActive() bool {

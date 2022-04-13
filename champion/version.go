@@ -16,7 +16,7 @@ const (
 
 func GetVersions() []version {
 	versions := getVersionList()
-	if len(versions) > 5 {
+	if versions != nil && len(versions) > 5 {
 		return versions[:5]
 	} else {
 		return versions[:]
@@ -24,8 +24,11 @@ func GetVersions() []version {
 }
 
 func getVersionList() []version {
-	var versions []version
 	body := tool.HttpGet(versionUrl)
+	if body == nil {
+		return nil
+	}
+	var versions []version
 	err := json.Unmarshal(body, &versions)
 	if err != nil {
 		logger.Error("json cant unmarshal", err)
