@@ -30,7 +30,7 @@ type releaseInfo struct {
 func (r releaseInfo) hasNewVersion() (ok bool, downloadUrl, info string) {
 	currVersion := global.Version
 	latestVersion := r.TagName[1:]
-	if currVersion > latestVersion {
+	if currVersion < latestVersion {
 		// 有新版本
 		return true, r.Assets[0].BrowserDownloadUrl, r.Body
 	}
